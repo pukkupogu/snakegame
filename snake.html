@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pogu & Pukku - Love Snake Game</title>
+    <style>
+        body {
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            font-family: 'Comic Sans MS', cursive;
+            overflow: hidden;
+        }
+        h1 {
+            color: white;
+            text-shadow: 2px 2px 5px red;
+        }
+        #score {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        canvas {
+            border: 5px solid white;
+            background: pink;
+            box-shadow: 0px 0px 20px rgba(255, 100, 150, 0.8);
+            width: 90vw;
+            height: 90vw;
+            max-width: 500px;
+            max-height: 500px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .btn {
+            font-size: 20px;
+            padding: 10px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        @media (min-width: 768px) {
+            .controls { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Pogu 🐍 & Pukku 🍫</h1>
+    <div id="score">Score: 0</div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="controls">
+        <button class="btn" onclick="changeDirection('LEFT')">⬅️</button>
+        <button class="btn" onclick="changeDirection('UP')">⬆️</button>
+        <button class="btn" onclick="changeDirection('DOWN')">⬇️</button>
+        <button class="btn" onclick="changeDirection('RIGHT')">➡️</button>
+    </div>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        let snake, direction, food, score;
+        let box = Math.floor(canvas.width / 25);
+        let gameSpeed = 150;
+        let touchStartX = 0, touchStartY = 0;
+
+        function resetGame() {
+            snake = [{ x: 10, y: 10 }];
+            direction = "RIGHT";
+            food = { x: Math.floor(Math.random() * (canvas.width / box)), y: Math.floor(Math.random() * (canvas.height / box)) };
+            score = 0;
+            document.getElementById("score").innerText = "Score: 0";
+        }
+
+        resetGame();
+
+        function changeDirection(newDirection) {
+            if (newDirection === "UP" && direction !== "DOWN") direction = "UP";
+            if (newDirection === "DOWN" && direction !== "UP") direction = "DOWN";
+            if (newDirection === "LEFT" && direction !== "RIGHT") direction = "LEFT";
+            if (newDirection === "RIGHT" && direction !== "LEFT") direction = "RIGHT";
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp") changeDirection("UP");
+            if (e.key === "ArrowDown") changeDirection("DOWN");
+            if (e.key === "ArrowLeft") changeDirection("LEFT");
+            if (e.key === "ArrowRight") changeDirection("RIGHT");
+        });
+
+        canvas.addEventListener("touchstart", (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        canvas.addEventListener("touchend", (e) => {
+            let touchEndX = e.changedTouches[0].clientX;
+            let touchEndY = e.changedTouches[0].clientY;
+            let dx = touchEndX - touchStartX;
+            let dy = touchEndY - touchStartY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0) changeDirection("RIGHT"); else changeDirection("LEFT");
+            } else {
+                if (dy > 0) changeDirection("DOWN"); else changeDirection("UP");
+            }
+        });
+
+        function draw() {
+            ctx.fillStyle = "pink";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "gold";
+            ctx.fillRect(food.x * box, food.y * box, box, box);
+            ctx.fillStyle = "black";
+            ctx.fillText("🍫 Pukku", food.x * box, food.y * box - 5);
+            
+            snake.forEach((segment, index) => {
+                ctx.fillStyle = index === 0 ? "red" : "white";
+                ctx.fillRect(segment.x * box, segment.y * box, box, box);
+                ctx.strokeRect(segment.x * box, segment.y * box, box, box);
+                if (index === 0) {
+                    ctx.fillStyle = "black";
+                    ctx.fillText("🐍 Pogu", segment.x * box, segment.y * box - 5);
+                }
+            });
+            
+            let newX = snake[0].x;
+            let newY = snake[0].y;
+            if (direction === "UP") newY--;
+            if (direction === "DOWN") newY++;
+            if (direction === "LEFT") newX--;
+            if (direction === "RIGHT") newX++;
+
+            if (newX === food.x && newY === food.y) {
+                food = { x: Math.floor(Math.random() * (canvas.width / box)), y: Math.floor(Math.random() * (canvas.height / box)) };
+                score += 10;
+                document.getElementById("score").innerText = "Score: " + score;
+            } else {
+                snake.pop();
+            }
+
+            let newHead = { x: newX, y: newY };
+            if (newX < 0 || newX >= canvas.width / box || newY < 0 || newY >= canvas.height / box || snake.some(segment => segment.x === newX && segment.y === newY)) {
+                resetGame();
+                return;
+            }
+            snake.unshift(newHead);
+        }
+
+        setInterval(draw, gameSpeed);
+    </script>
+</body>
+</html
